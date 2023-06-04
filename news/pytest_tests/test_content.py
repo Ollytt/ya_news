@@ -1,9 +1,15 @@
+from datetime import datetime, timedelta
+
 import pytest
 from pytest_lazyfixture import lazy_fixture
 
 from django.conf import settings
 from django.urls import reverse
-#from datetime import datetime, timedelta
+from django.contrib.auth import get_user_model
+
+from news.models import Comment
+
+User = get_user_model()
 
 
 @pytest.mark.parametrize(
@@ -48,12 +54,21 @@ def test_edit_comment_page_contains_form(id_for_args, author_client):
     assert 'form' in response.context
 
 
-#def test_comments_order(all_comments, news, client):
-    #url = reverse('news:detail', args=(news.id,))
-    #response = client.get(url)
-    #assert 'news' in response.context
-    #all_comments = news.comment_set.all()
-    #assert all_comments[0].created < all_comments[1].created
+def test_comments_order(comment, news, admin_client):
+    author = User.objects.create(username='Комментатор')
+    now = datetime.now()
+    for index in range(2):
+        comment = Comment.objects.create(
+            news=news, author=author, text=f'Tекст {index}',
+        )
+        comment.created = now + timedelta(days=index)
+        comment.save()
+    url = reverse('news:detail', args=(news.id,))
+    response = admin_client.get(url)
+    assert 'news' in response.context
+    news = response.context['news']
+    all_comments = news.comment_set.all()
+    assert all_comments[0].created < all_comments[1].created
 
 
 @pytest.mark.parametrize(

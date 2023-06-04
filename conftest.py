@@ -52,7 +52,11 @@ def comment(author, news):
     return comment
 
 
-# не получается изменить время создания
+@pytest.fixture
+def id_for_args(comment):
+    return comment.id,
+
+
 @pytest.fixture
 def all_comments(author, news):
     now = timezone.now()
@@ -64,11 +68,6 @@ def all_comments(author, news):
         )
         now_delta = timedelta(days=index)
         return (comment.created.replace(tzinfo=None) - now + now_delta)
-
-
-@pytest.fixture
-def id_for_args(comment):
-    return comment.id,
 
 
 @pytest.fixture
